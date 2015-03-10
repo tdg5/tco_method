@@ -1,7 +1,7 @@
 module TCOMethod
-  private
 
   def tco_method(method_name, method_proc = nil)
+    raise "wah"
     unless method_name || block_given?
       raise ArgumentError, "Method or block required!"
     end

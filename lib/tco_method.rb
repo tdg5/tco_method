@@ -1,6 +1,7 @@
 require "tco_method/version"
 require "method_source"
 require "tco_method/tco_method"
+require "tco_method/eval"
 require "pry"
 
 module TCOMethod
@@ -8,6 +9,10 @@ module TCOMethod
     tailcall_optimization: true,
     trace_instruction: false,
   }.freeze
+
+  def self.tco_eval(code)
+    RubyVM::InstructionSequence.new(code, nil, nil, nil, ISEQ_OPTIONS).eval
+  end
 
   def self.compile_method(receiver, method_name, method_proc)
     lambda_code = method_proc.source.sub(/\A.+do ?\|/, "define_method(:#{method_name}) do |")
