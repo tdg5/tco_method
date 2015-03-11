@@ -4,6 +4,8 @@ require "tco_method"
 
 # Use alternate shoulda-style DSL for tests
 class TCOMethod::TestCase < Minitest::Spec
+  LARGEST_VM_STACK_SIZE = 128
+
   class << self
     alias :setup :before
     alias :teardown :after
@@ -48,23 +50,34 @@ class TCOMethod::TestCase < Minitest::Spec
 
   # binary search for point of stack oveflow of unoptimized_factorial
   def self.factorial_stack_buster
-    limit = vm_stack_size
-    found_division_threshold = false
-    addend = 128
+    # Use a frame size that's larger than the expected frame size to ensure
+    # that limit is less than the point of overflow
+    limit = last_good_limit = stack_depth_limit_for_frame_size(LARGEST_VM_STACK_SIZE * 2)
+    last_overflow_limit = nil
+    # Determine an upper-bound for binary search
     loop do
       begin
         unoptimized_factorial(limit)
-        found_division_threshold ||= true
-        limit += addend
+        last_good_limit = limit
+        limit *= 2
       rescue SystemStackError
-        if found_division_threshold && addend == 1
-          return limit - 1
-        elsif found_division_threshold
-          limit -= addend
-          addend /= 2
-        else
-          limit /= 2
-        end
+        last_overflow_limit = limit
+        break
+      end
+    end
+
+    # Reset for binary search for point of stack overflow
+    limit = last_good_limit
+    loop do
+      begin
+        half_the_distance_to_overflow = (last_overflow_limit - limit) / 2
+        limit += half_the_distance_to_overflow
+        unoptimized_factorial(limit)
+        last_good_limit = limit
+      rescue SystemStackError
+        return limit if last_good_limit == limit - 1
+        last_overflow_limit = limit
+        limit = last_good_limit
       end
     end
   end

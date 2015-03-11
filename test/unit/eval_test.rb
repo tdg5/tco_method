@@ -29,9 +29,8 @@ class TCOEvalTest < TCOMethod::TestCase
       CODE
 
       expected_result = 1
-      # Push 100 past computed max stack depth for factorial stack buster
-      factorial_seed = self.class.factorial_stack_buster_stack_depth_remaining + 1
 
+      factorial_seed = self.class.factorial_stack_buster_stack_depth_remaining + 1
       assert_unoptimized_factorial_stack_overflow(factorial_seed)
 
       factorial_seed.times { |multiplier| expected_result *= multiplier + 1 }
