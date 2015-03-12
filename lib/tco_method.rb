@@ -1,6 +1,8 @@
 require "method_source"
 require "tco_method/version"
 require "tco_method/eval"
+require "tco_method/method_info"
+require "tco_method/method"
 
 module TCOMethod
   ISEQ_OPTIONS = {
