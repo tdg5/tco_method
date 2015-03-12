@@ -22,6 +22,10 @@ module TCOMethod
       rescue SystemStackError
         assert true
       end
+
+      def iterative_factorial(n)
+        (2..n).inject(1, :*)
+      end
     end
   end
 end

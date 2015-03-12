@@ -35,8 +35,7 @@ class TCOEvalTest < TCOMethod::TestCase
       factorial_seed = factorial_stack_buster_stack_depth_remaining + 100
       assert_unoptimized_factorial_stack_overflow(factorial_seed)
 
-      expected_result = 1
-      factorial_seed.times { |multiplier| expected_result *= multiplier + 1 }
+      expected_result = iterative_factorial(factorial_seed)
       assert_equal expected_result, dummy_class.new.factorial(factorial_seed)
     end
   end
