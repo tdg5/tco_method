@@ -2,6 +2,10 @@ source "https://rubygems.org"
 
 gemspec
 
+group :doc do
+  gem "yard"
+end
+
 group :test do
   gem "coveralls", :require => false
   gem "guard"
