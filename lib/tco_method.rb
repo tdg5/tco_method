@@ -1,3 +1,4 @@
+require "method_source"
 require "tco_method/version"
 require "tco_method/eval"
 
