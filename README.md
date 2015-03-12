@@ -75,7 +75,7 @@ MyClass.new.factorial(10_000).to_s.length
 
 The list so far:
 
-- Currently only works with methods defined using the `def` keyword.
+- Class annotations only work with methods defined using the `def` keyword.
 - Class annotations use the [`method_source` gem](https://github.com/banister/method_source)
   to retrieve the method source to reevaluate. As a result, class annotations
   can act strangely when used in more dynamic contexts like `irb` or `pry`.
