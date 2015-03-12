@@ -13,13 +13,15 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/tdg5/tco_method"
   spec.license       = "MIT"
 
+  spec.required_ruby_version = "~> 2"
+
   spec.files         = `git ls-files -z`.split("\x0")
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^test/})
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "method_source"
+  spec.add_dependency "method_source", "~> 0"
 
   spec.add_development_dependency "bundler", "~> 1.6"
-  spec.add_development_dependency "rake"
+  spec.add_development_dependency "rake", "~> 0"
 end
