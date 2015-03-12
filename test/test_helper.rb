@@ -1,3 +1,11 @@
+if ENV["CI"]
+  require "simplecov"
+  require "coveralls"
+  Coveralls.wear!
+  SimpleCov.formatter = Coveralls::SimpleCov::Formatter
+  SimpleCov.root(File.expand_path("../..", __FILE__))
+end
+
 require "minitest/autorun"
 require "mocha/setup"
 require "tco_method"
