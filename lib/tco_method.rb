@@ -47,8 +47,9 @@ module TCOMethod
     if method_info.type != :method
       raise TypeError, "Invalid method type: #{method_info.type}"
     end
+    receiver_class = receiver.is_a?(Class) ? :class : :module
     code = <<-CODE
-      class #{receiver.name}
+      #{receiver_class} #{receiver.name}
         #{existing_method.source}
       end
     CODE
