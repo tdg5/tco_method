@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = TCOMethod::VERSION
   spec.authors       = ["Danny Guinther"]
   spec.email         = ["dannyguinther@gmail.com"]
-  spec.summary       = %q{Simplifies creating tail call optimized procs/lambdas/methods in Ruby.}
-  spec.description   = %q{Simplifies creating tail call optimized procs/lambdas/methods in Ruby.}
+  spec.summary       = %q{Simplifies compiling code with tail call optimization in MRI Ruby.}
+  spec.description   = %q{Simplifies compiling code with tail call optimization in MRI Ruby.}
   spec.homepage      = "https://github.com/tdg5/tco_method"
   spec.license       = "MIT"
 
