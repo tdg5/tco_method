@@ -8,8 +8,9 @@
 
 Provides `TCOMethod::Mixin` for extending Classes and Modules with helper methods
 to facilitate evaluating code and some types of methods with tail call
-optimization enabled. Also provides `TCOMethod.tco_eval` providing a direct and
-easy means to evaluate code strings with tail call optimization enabled.
+optimization enabled in MRI Ruby. Also provides `TCOMethod.tco_eval` providing a
+direct and easy means to evaluate code strings with tail call optimization
+enabled.
 
 ## Installation
 
@@ -162,3 +163,16 @@ I'm sure there are more and I will document them here as I come across them.
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create a new Pull Request
+
+## Reference
+
+- Class annotations are based on [Nithin Bekal's blog post *Tail Call
+  Optimization in Ruby*](http://nithinbekal.com/posts/ruby-tco/) which follows
+  his efforts to create a method decorator to recompile methods with tail call
+  optimization
+- For more background on how tail call optimization is implemented in MRI Ruby,
+  see [Danny Guinther's *Tail Call Optimization in Ruby: Deep Dive*](http://blog.tdg5.com/tail-call-optimization-ruby-deep-dive/)
+- For those on flavors of Ruby other than MRI, check out [Magnus Holm's *Tailin'
+  Ruby*](http://timelessrepo.com/tailin-ruby) for some insight into how else
+  tail call optimization (or at least tail call optimization like behavior) can
+  be achieved in Ruby
