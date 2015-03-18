@@ -14,10 +14,10 @@ module TCOMethod
 
         private
 
-        def stack_overflow_threshold(depth = 1)
-          stack_overflow_threshold(depth + 1)
-        rescue SystemStackError
-          depth
+        def stack_overflow_threshold
+          stack_overflow_threshold
+        rescue SystemStackError => e
+          e.backtrace.length
         end
       end
     end

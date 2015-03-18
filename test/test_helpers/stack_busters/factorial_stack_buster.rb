@@ -25,32 +25,13 @@ module TCOMethod
         def stack_overflow_threshold
           # Use a frame size that's larger than the expected frame size to ensure
           # that limit is less than the point of overflow
-          limit = last_good_limit = stack_depth_limit_for_frame_size(LARGEST_VM_STACK_SIZE * 2)
-          last_overflow_limit = nil
-          # Determine an upper-bound for binary search
+          limit = stack_depth_limit_for_frame_size(LARGEST_VM_STACK_SIZE * 2)
           loop do
             begin
               unoptimized_factorial(limit)
-              last_good_limit = limit
               limit *= 2
-            rescue SystemStackError
-              last_overflow_limit = limit
-              break
-            end
-          end
-
-          # Reset for binary search for point of stack overflow
-          limit = last_good_limit
-          loop do
-            return last_overflow_limit if last_overflow_limit == last_good_limit + 1
-            begin
-              half_the_distance_to_overflow = (last_overflow_limit - limit) / 2
-              limit += half_the_distance_to_overflow
-              unoptimized_factorial(limit)
-              last_good_limit = limit
-            rescue SystemStackError
-              last_overflow_limit = limit
-              limit = last_good_limit
+            rescue SystemStackError => e
+              return e.backtrace.length
             end
           end
         end
