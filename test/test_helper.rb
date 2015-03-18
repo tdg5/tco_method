@@ -12,9 +12,7 @@ require "minitest/autorun"
 require "mocha/setup"
 require "tco_method"
 
-require "test_helpers/vm_stack_helper"
-require "test_helpers/factorial_stack_buster_helper"
-require "test_helpers/vanilla_stack_buster_helper"
+require_relative "test_helpers/assertions"
 
 # Use alternate shoulda-style DSL for tests
 class TCOMethod::TestCase < Minitest::Spec

@@ -1,7 +1,7 @@
 require "test_helper"
 
 class TCOMethodTest < TCOMethod::TestCase
-  include TCOMethod::TestHelpers::FactorialStackBusterHelper
+  include TCOMethod::TestHelpers::Assertions
 
   Subject = TCOMethod
 
@@ -14,25 +14,33 @@ class TCOMethodTest < TCOMethod::TestCase
 
     # Equivalent to the below, but provides a target for verifying that
     # tco_module_method works on Classes and tco_class_method works on Modules.
-    def self.module_factorial(n, acc = 1)
-      n <= 1 ? acc : module_factorial(n - 1, n * acc)
+    def self.module_fib_yielder(index, back_one = 1, back_two = 0, &block)
+      yield back_two if index > 0
+      index < 1 ? back_two : module_fib_yielder(index - 1, back_one + back_two, back_one, &block)
     end
 
     # Equivalent to the above, but provides a target for verifying that
     # tco_module_method works on Classes and tco_class_method works on Modules.
-    def self.class_factorial(n, acc = 1)
-      n <= 1 ? acc : class_factorial(n - 1, n * acc)
+    def self.class_fib_yielder(index, back_one = 1, back_two = 0, &block)
+      yield back_two if index > 0
+      index < 1 ? back_two : class_fib_yielder(index - 1, back_one + back_two, back_one, &block)
     end
 
     define_method(:instance_block_method)  { }
 
-    def instance_factorial(n, acc = 1)
-      n <= 1 ? acc : instance_factorial(n - 1, n * acc)
+    # Equivalent to the above, but provides a target for verifying that
+    # instance methods work for both Classes and Modules
+    def instance_fib_yielder(index, back_one = 1, back_two = 0, &block)
+      yield back_two if index > 0
+      index < 1 ? back_two : instance_fib_yielder(index - 1, back_one + back_two, back_one, &block)
     end
   end
 
   TestModule = Module.new(&test_subject_builder)
   TestClass = Class.new(&test_subject_builder)
+
+  # Grab source before it's recompiled for use later
+  InstanceFibYielderSource = TestClass.instance_method(:instance_fib_yielder).source
 
   subject { Subject }
 
@@ -57,21 +65,15 @@ class TCOMethodTest < TCOMethod::TestCase
     end
 
     should "compile the given code with tail call optimization" do
-      FactorialEvalDummy = dummy_class = Class.new
+      EvalDummy = dummy_class = Class.new
       subject.tco_eval(<<-CODE)
         class #{dummy_class.name}
-          def factorial(n, acc = 1)
-            n <= 1 ? acc : factorial(n - 1, n * acc)
-          end
+          #{InstanceFibYielderSource}
         end
       CODE
 
-      # Exceed maximum available stack depth by 100 for good measure
-      factorial_seed = factorial_stack_buster_stack_depth_remaining + 100
-      assert_unoptimized_factorial_stack_overflow(factorial_seed)
-
-      expected_result = iterative_factorial(factorial_seed)
-      assert_equal expected_result, dummy_class.new.factorial(factorial_seed)
+      fib_yielder = dummy_class.new.method(:instance_fib_yielder)
+      assert tail_call_optimized?(fib_yielder, 5)
     end
   end
 
@@ -119,15 +121,12 @@ class TCOMethodTest < TCOMethod::TestCase
           end
 
           should "re-compile the given method with tail call optimization" do
-            # Exceed maximum available stack depth by 100 for good measure
-            factorial_seed = factorial_stack_buster_stack_depth_remaining + 100
-            assert_raises(SystemStackError) do
-              method_owner.module_factorial(factorial_seed)
-            end
+            fib_yielder = method_owner.method(:module_fib_yielder)
+            refute tail_call_optimized?(fib_yielder, 5)
 
-            subject.call(method_owner, :module_factorial, :module)
-            expected_result = iterative_factorial(factorial_seed)
-            assert_equal expected_result, method_owner.module_factorial(factorial_seed)
+            subject.call(method_owner, :module_fib_yielder, :module)
+            fib_yielder = method_owner.method(:module_fib_yielder)
+            assert tail_call_optimized?(fib_yielder, 5)
           end
         end
 
@@ -139,15 +138,12 @@ class TCOMethodTest < TCOMethod::TestCase
           end
 
           should "re-compile the given method with tail call optimization" do
-            # Exceed maximum available stack depth by 100 for good measure
-            factorial_seed = factorial_stack_buster_stack_depth_remaining + 100
-            assert_raises(SystemStackError) do
-              method_owner.class_factorial(factorial_seed)
-            end
+            fib_yielder = method_owner.method(:class_fib_yielder)
+            refute tail_call_optimized?(fib_yielder, 5)
 
-            subject.call(method_owner, :class_factorial, method_owner_class)
-            expected_result = iterative_factorial(factorial_seed)
-            assert_equal expected_result, method_owner.class_factorial(factorial_seed)
+            subject.call(method_owner, :class_fib_yielder, :module)
+            fib_yielder = method_owner.method(:class_fib_yielder)
+            assert tail_call_optimized?(fib_yielder, 5)
           end
         end
 
@@ -159,16 +155,14 @@ class TCOMethodTest < TCOMethod::TestCase
           end
 
           should "re-compile the given method with tail call optimization" do
-            # Exceed maximum available stack depth by 100 for good measure
-            factorial_seed = factorial_stack_buster_stack_depth_remaining + 100
             instance_class = instance_class_for_receiver(method_owner)
-            assert_raises(SystemStackError) do
-              instance_class.new.instance_factorial(factorial_seed)
-            end
 
-            subject.call(method_owner, :instance_factorial, :instance)
-            expected_result = iterative_factorial(factorial_seed)
-            assert_equal expected_result, instance_class.new.instance_factorial(factorial_seed)
+            fib_yielder = instance_class.new.method(:instance_fib_yielder)
+            refute tail_call_optimized?(fib_yielder, 5)
+
+            subject.call(method_owner, :instance_fib_yielder, :instance)
+            fib_yielder = instance_class.new.method(:instance_fib_yielder)
+            assert tail_call_optimized?(fib_yielder, 5)
           end
         end
       end

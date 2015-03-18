@@ -1,8 +1,6 @@
 require "test_helper"
 
 class MixinTest < TCOMethod::TestCase
-  include TCOMethod::TestHelpers::FactorialStackBusterHelper
-
   TestClass = Class.new { extend TCOMethod::Mixin }
   TestModule = Module.new { extend TCOMethod::Mixin }
 
