@@ -169,6 +169,93 @@ class TCOMethodTest < TCOMethod::TestCase
     end
   end
 
+  context "::tco_proc" do
+    should "raise ArgumentError if a block is not given" do
+      exception = assert_raises(ArgumentError) do
+        subject.tco_proc
+      end
+      assert_match(/block required/i, exception.message)
+    end
+
+    should "reevaluate the provided block with the correct binding" do
+      some_variable = "Hello, world!"
+      block = subject.tco_proc do
+        some_variable
+      end
+      assert_equal some_variable, block.call
+    end
+
+    should "work with a proc in block form" do
+      some_variable = "Hello, world!"
+      block = subject.tco_proc do
+        some_variable
+      end
+      assert_equal some_variable, block.call
+    end
+
+    should "work with a proc in single-line form" do
+      some_variable = "Hello, world!"
+      block = subject.tco_proc { some_variable }
+      assert_equal some_variable, block.call
+    end
+
+    should "return a proc that is not a lambda" do
+      some_variable = "Hello, world!"
+      block = subject.tco_proc { some_variable }
+      assert_equal false, block.lambda?
+    end
+
+    should "be tail call optimized" do
+      counter = 0
+      block = subject.tco_lambda do
+        counter += 1
+        self.count if counter < 40000
+      end
+      klass = Class.new { define_method(:count, &block) }
+      klass.new.count
+      assert_equal 40000, counter
+    end
+  end
+
+  # Tests are repeated because the TCOMethod library doesn't currently support
+  # dynamic invocation of helper methods.
+  context "::tco_lambda" do
+    should "raise ArgumentError if a block is not given" do
+      exception = assert_raises(ArgumentError) do
+        subject.tco_lambda
+      end
+      assert_match(/block required/i, exception.message)
+    end
+
+    should "reevaluate the provided block with the correct binding" do
+      some_variable = "Hello, world!"
+      block = subject.tco_lambda do
+        some_variable
+      end
+      assert_equal some_variable, block.call
+    end
+
+    should "work with a proc in block form" do
+      some_variable = "Hello, world!"
+      block = subject.tco_lambda do
+        some_variable
+      end
+      assert_equal some_variable, block.call
+    end
+
+    should "work with a proc in single-line form" do
+      some_variable = "Hello, world!"
+      block = subject.tco_lambda { some_variable }
+      assert_equal some_variable, block.call
+    end
+
+    should "return a proc that is a lambda" do
+      some_variable = "Hello, world!"
+      block = subject.tco_lambda { some_variable }
+      assert_equal true, block.lambda?
+    end
+  end
+
   def instance_class_for_receiver(receiver)
     return receiver if receiver.is_a?(Class)
     Class.new { include receiver }

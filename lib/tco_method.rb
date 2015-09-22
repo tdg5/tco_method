@@ -69,4 +69,61 @@ module TCOMethod
     raise ArgumentError, "Invalid code string!" unless code.is_a?(String)
     RubyVM::InstructionSequence.new(code, nil, nil, nil, ISEQ_OPTIONS).eval
   end
+
+  # Provides a mechanism for creating a Proc with tail call optimization
+  # enabled. The returned Proc will not be a lambda regardless of whether or not
+  # the provided block is a lambda. If a lambda is desired, use
+  # {TCOMethod::tco_lambda} instead.
+  #
+  # @param [Proc] block The proc to reevaluate with tail call optimization
+  #   enabled.
+  # @return [Proc] Returns a copy of the Proc reevaluated with tail call
+  #   optimization enabled.
+  # @raise [ArgumentError] if a block is not provided.
+  # @note Because of some hacky regexery, this method does not currently support
+  #   dynamic/indirect invocation via :send, aliasing, or other similar methods.
+  def self.tco_proc(&block)
+    raise ArgumentError, "Block required" unless block_given?
+    tco_block(:proc, &block)
+  end
+
+  # Provides a mechanism for creating a Proc with tail call optimization
+  # enabled. The returned Proc will be a lambda regardless of whether or not the
+  # provided block is a lambda. If a lambda is not desired, use
+  # {TCOMethod::tco_proc} instead.
+  #
+  # @param [Proc] block The proc to reevaluate with tail call optimization
+  #   enabled.
+  # @return [Proc] Returns a copy of the Proc reevaluated with tail call
+  #   optimization enabled.
+  # @raise [ArgumentError] if a block is not provided.
+  # @note Because of some hacky regexery, this method does not currently support
+  #   dynamic/indirect invocation via :send, aliasing, or other similar methods.
+  def self.tco_lambda(&block)
+    raise ArgumentError, "Block required" unless block_given?
+    tco_block(:lambda, &block)
+  end
+
+  # Helper method facilitating recompiling a Proc with tail call optimization
+  # enabled.
+  #
+  # @param [String,Symbol] type The kind of Proc that should be returned. Valid
+  #   values are :proc or :lambda.
+  # @param [Proc] block The proc to reevaluate with tail call optimization
+  #   enabled.
+  # @return [Proc] Returns a copy of the Proc reevaluated with tail call
+  #   optimization enabled.
+  #   code String.
+  def self.tco_block(type = :proc, &block)
+    code = block.source.sub(/^.*tco_(?=#{type})/, "")
+    # Regrettable hack required to make the block's binding available to the
+    # context in which the modified code block will be evaluated. Other ideas
+    # are welcome!
+    Thread.current[:tco_block_binding] = block.binding
+    executor = "Thread.current[:tco_block_binding].eval(#{code.inspect})"
+    TCOMethod.tco_eval(executor)
+  ensure
+    Thread.current[:tco_block_binding] = nil
+  end
+  private_class_method :tco_block
 end
