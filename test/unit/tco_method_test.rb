@@ -125,8 +125,10 @@ class TCOMethodTest < TCOMethod::TestCase
             refute tail_call_optimized?(fib_yielder, 5)
 
             subject.call(method_owner, :module_fib_yielder, :module)
-            fib_yielder = method_owner.method(:module_fib_yielder)
-            assert tail_call_optimized?(fib_yielder, 5)
+            tco_fib_yielder = method_owner.method(:module_fib_yielder)
+            assert tail_call_optimized?(tco_fib_yielder, 5)
+
+            assert_equal fib_yielder.source_location, tco_fib_yielder.source_location
           end
         end
 
@@ -142,8 +144,10 @@ class TCOMethodTest < TCOMethod::TestCase
             refute tail_call_optimized?(fib_yielder, 5)
 
             subject.call(method_owner, :class_fib_yielder, :module)
-            fib_yielder = method_owner.method(:class_fib_yielder)
-            assert tail_call_optimized?(fib_yielder, 5)
+            tco_fib_yielder = method_owner.method(:class_fib_yielder)
+            assert tail_call_optimized?(tco_fib_yielder, 5)
+
+            assert_equal fib_yielder.source_location, tco_fib_yielder.source_location
           end
         end
 
@@ -161,8 +165,10 @@ class TCOMethodTest < TCOMethod::TestCase
             refute tail_call_optimized?(fib_yielder, 5)
 
             subject.call(method_owner, :instance_fib_yielder, :instance)
-            fib_yielder = instance_class.new.method(:instance_fib_yielder)
-            assert tail_call_optimized?(fib_yielder, 5)
+            tco_fib_yielder = instance_class.new.method(:instance_fib_yielder)
+            assert tail_call_optimized?(tco_fib_yielder, 5)
+
+            assert_equal fib_yielder.source_location, tco_fib_yielder.source_location
           end
         end
       end

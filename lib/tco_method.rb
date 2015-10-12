@@ -53,7 +53,9 @@ module TCOMethod
         #{existing_method.source}
       end
     CODE
-    tco_eval(code)
+
+    file, line = existing_method.source_location
+    tco_eval(code, file, File.dirname(file), line - 1)
     method_name.to_sym
   end
 
@@ -65,8 +67,8 @@ module TCOMethod
   # @return [Object] Returns the value of the final expression of the provided
   #   code String.
   # @raise [ArgumentError] if the provided code argument is not a String.
-  def self.tco_eval(code)
+  def self.tco_eval(code, file = nil, path = nil, line = nil)
     raise ArgumentError, "Invalid code string!" unless code.is_a?(String)
-    RubyVM::InstructionSequence.new(code, nil, nil, nil, ISEQ_OPTIONS).eval
+    RubyVM::InstructionSequence.new(code, file, path, line, ISEQ_OPTIONS).eval
   end
 end
