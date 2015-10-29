@@ -175,6 +175,58 @@ class TCOMethodTest < TCOMethod::TestCase
     end
   end
 
+  context "::tco_require" do
+    should "require the named file such that it is tail call optimized" do
+      load("fixtures/fib_yielder.rb")
+      fib_yielder = FibYielder.method(:fib_yielder)
+      refute tail_call_optimized?(fib_yielder, 5)
+
+      result = TCOMethod.tco_require("fixtures/fib_yielder")
+      assert_equal true, result
+      fib_yielder = FibYielder.method(:fib_yielder)
+      assert tail_call_optimized?(fib_yielder, 5)
+    end
+  end
+
+  context "::tco_require" do
+    should "require the named file such that it is tail call optimized" do
+      load("fixtures/fib_yielder.rb")
+      fib_yielder = FibYielder.method(:fib_yielder)
+      refute tail_call_optimized?(fib_yielder, 5)
+
+      result = TCOMethod.tco_load("fixtures/fib_yielder.rb")
+      assert_equal true, result
+      fib_yielder = FibYielder.method(:fib_yielder)
+      assert tail_call_optimized?(fib_yielder, 15000)
+    end
+  end
+
+  context "::require_tco!" do
+    should "something" do
+      # Hacky workaround to ensure code is only loaded once.
+      module ::RequireTCOTester; end
+      RequireTCOTester.expects(:bump).once
+
+      load "fixtures/require_tco.rb"
+      meth = RequireTCOTester.method(:fib_yielder)
+      assert tail_call_optimized?(meth, 5)
+    end
+
+    should "something" do
+      # Hacky workaround to ensure code is only loaded once.
+      module ::RequireTCOTester; end
+      RequireTCOTester.expects(:bump).once
+
+      TCOMethod.with_global_tco do
+        # Shouldn't be called again if TCO already enabled.
+        TCOMethod.expects(:with_global_tco).never
+        load "fixtures/require_tco.rb"
+      end
+      meth = RequireTCOTester.method(:fib_yielder)
+      assert tail_call_optimized?(meth, 5)
+    end
+  end
+
   def instance_class_for_receiver(receiver)
     return receiver if receiver.is_a?(Class)
     Class.new { include receiver }
