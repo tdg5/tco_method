@@ -1,3 +1,5 @@
+require "tco_method/method_reevaluator"
+
 module TCOMethod
   # Mixin providing tail call optimization eval and class annotations. When
   # extended by a Class or Module adds methods for evaluating code with tail
@@ -13,7 +15,7 @@ module TCOMethod
     # @return [Symbol] The symbolized method name.
     # @see TCOMethod.reevaluate_method_with_tco
     def tco_module_method(method_name)
-      TCOMethod.reevaluate_method_with_tco(self, method_name, :module)
+      MethodReevaluator.new(self, method_name, :module)
     end
     alias_method :tco_class_method, :tco_module_method
 
@@ -38,7 +40,7 @@ module TCOMethod
     # @return [Symbol] The symbolized method name.
     # @see TCOMethod.reevaluate_method_with_tco
     def tco_method(method_name)
-      TCOMethod.reevaluate_method_with_tco(self, method_name, :instance)
+      MethodReevaluator.new(self, method_name, :instance)
     end
   end
 end
