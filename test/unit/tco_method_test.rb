@@ -43,5 +43,22 @@ module TCOMethod
         assert tail_call_optimized?(fib_yielder, 5)
       end
     end
+
+    context "::with_tco" do
+      should "raise ArgumentError if a block is not given" do
+        exception = assert_raises(ArgumentError) { subject.with_tco }
+        assert_match(/block required/i, exception.message)
+      end
+
+      should "delegate to an instance of WithTCOBlock" do
+        block = proc { "Hello, world!" }
+        expected_result = block.call
+        instance = TCOMethod::BlockWithTCO.new(&block)
+        TCOMethod::BlockWithTCO.expects(:new).with(block).returns(instance)
+        instance.expects(:result).returns(expected_result)
+        result = TCOMethod.with_tco(&block)
+        assert_equal expected_result, result
+      end
+    end
   end
 end
