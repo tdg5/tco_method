@@ -11,8 +11,7 @@ end
 require "minitest/autorun"
 require "mocha/setup"
 require "tco_method"
-
-require_relative "test_helpers/assertions"
+require "test_helpers/assertions"
 
 # Use alternate shoulda-style DSL for tests
 class TCOMethod::TestCase < Minitest::Spec
