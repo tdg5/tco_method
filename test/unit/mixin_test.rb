@@ -60,6 +60,16 @@ module TCOMethod
           assert_equal ::WithTCOSensor, result
         end
       end
+
+      context "#with_tco" do
+        should "call TCOMethod.with_tco with the given block" do
+          # Must use some sort of global because the block is called with a
+          # different binding.
+          $with_tco_called = false
+          subject.with_tco { $with_tco_called = true }
+          assert $with_tco_called
+        end
+      end
     end
 
     context "Class extensions" do
