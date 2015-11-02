@@ -13,7 +13,7 @@ module TCOMethod
     # @param [String, Symbol] method_name The name of the class or module method
     #   that should be reeevaluated with tail call optimization enabled.
     # @return [Symbol] The symbolized method name.
-    # @see TCOMethod.reevaluate_method_with_tco
+    # @see TCOMethod::MethodReevaluator
     def tco_module_method(method_name)
       MethodReevaluator.new(self, method_name, :module)
     end
@@ -38,9 +38,23 @@ module TCOMethod
     # @param [String, Symbol] method_name The name of the instance method that
     #   should be reeevaluated with tail call optimization enabled.
     # @return [Symbol] The symbolized method name.
-    # @see TCOMethod.reevaluate_method_with_tco
+    # @see TCOMethod::MethodReevaluator
     def tco_method(method_name)
       MethodReevaluator.new(self, method_name, :instance)
+    end
+
+    # Allows for executing a block of code with tail call optimization enabled.
+    #
+    # All code that is evaluated in the block will be evaluated with tail call
+    # optimization enabled, however here be dragons, so make sure to read the
+    # docs for {TCOMethod.with_tco} before getting too crazy.
+    #
+    # @param [Proc] block The proc to evaluate with tail call optimization
+    #   enabled.
+    # @return [Object] Returns whatever the result of evaluating the given block.
+    # @see TCOMethod.with_tco
+    def with_tco(&block)
+      TCOMethod.with_tco(&block)
     end
   end
 end
