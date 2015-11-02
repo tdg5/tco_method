@@ -6,11 +6,29 @@
 [![Code Climate](https://codeclimate.com/github/tdg5/tco_method/badges/gpa.svg)](https://codeclimate.com/github/tdg5/tco_method)
 [![Dependency Status](https://gemnasium.com/tdg5/tco_method.svg)](https://gemnasium.com/tdg5/tco_method)
 
-Provides `TCOMethod::Mixin` for extending Classes and Modules with helper methods
-to facilitate evaluating code and some types of methods with tail call
-optimization enabled in MRI Ruby. Also provides `TCOMethod.tco_eval` providing a
-direct and easy means to evaluate code strings with tail call optimization
-enabled.
+The `tco_method` gem provides a number of different APIs to facilitate
+evaluating code with tail call optimization enabled in MRI Ruby.
+
+The `TCOMethod.with_tco` method is perhaps the simplest means of evaluating code
+with tail call optimization enabled. `TCOMethod.with_tco` takes a block and
+evaluates all code in that block with tail call optimization enabled.
+
+The `TCOMethod::Mixin` module extends Classes and Modules with helper methods
+(kind of like method annotations) to facilitate evaluating code and some types
+of methods with tail call optimization enabled in MRI Ruby.
+
+The `TCOMethod.tco_eval` method provides a direct and easy means to evaluate
+code strings with tail call optimization enabled. This API is the most
+cumbersome, but can be useful for loading full files with tail call optimization
+enabled. It is also the foundation of all of the other `TCOMethod` APIs.
+
+There are a few gotchas. For example, even when using one of the APIs provided
+by the `tco_method` gem, `require` and `load` still won't evaluate code with
+tail call optimization enabled without changing the `RubyVM` settings globally.
+The same goes for `Kernel#eval` and its siblings. More on the various
+limitations of the `tco_method` gem are outlined in the docs in the
+[Gotchas](http://www.rubydoc.info/gems/tco_method/file/README.md#Gotchas)
+section.
 
 ## Installation
 
@@ -41,8 +59,28 @@ library:
 require "tco_method"
 ```
 
-Extend a class with the [`TCOMethod::Mixin`](http://www.rubydoc.info/gems/tco_method/TCOMethod/Mixin)
-and let the fun begin!
+The fastest road to tail call optimized glory is the
+[`TCOMethod.with_tco`](http://www.rubydoc.info/gems/tco_method/TCOMethod#with_tco-class_method)
+method. Using
+[`TCOMethod.with_tco`](http://www.rubydoc.info/gems/tco_method/TCOMethod#with_tco-class_method)
+you can evaluate a block of code with tail call optimization enabled liked so:
+
+```ruby
+TCOMethod.with_tco do
+  class MyClass
+    def factorial(n, acc = 1)
+      n <= 1 ? acc : factorial(n - 1, n * acc)
+    end
+  end
+end
+
+puts MyClass.new.factorial(10_000).to_s.length
+# => 35660
+```
+
+Alternatively, you can extend a Class or Module with the
+[`TCOMethod::Mixin`](http://www.rubydoc.info/gems/tco_method/TCOMethod/Mixin)
+and let the TCO fun begin using helpers that act like method annotations.
 
 To redefine an instance method with tail call optimization enabled, use
 [`tco_method`](http://www.rubydoc.info/gems/tco_method/TCOMethod/Mixin:tco_method):
@@ -79,9 +117,14 @@ puts MyFibonacci.fibonacci(10_000).to_s.length
 # => 2090
 ```
 
-Or, for more power and flexibility (at the cost of stringified code blocks) use
+Or, depending on your needs (and your love for stringified code blocks), you can
+also use
 [`TCOMethod.tco_eval`](http://www.rubydoc.info/gems/tco_method/TCOMethod/Mixin:tco_eval)
-directly:
+directly.
+[`TCOMethod.tco_eval`](http://www.rubydoc.info/gems/tco_method/TCOMethod/Mixin:tco_eval)
+can be useful in situations where the `method_source` gem is unable to determine
+the source of a particular block or for loading entire files with tail call
+optimization enabled.
 
 ```ruby
 TCOMethod.tco_eval(<<-CODE)
@@ -96,11 +139,12 @@ MyClass.new.factorial(10_000).to_s.length
 # => 35660
 ```
 
-You can kind of get around this by dynamically reading the code you want to
-compile with tail call optimization, but this approach also has downsides in
-that it goes around the standard Ruby `require` model. For example, consider the
-Fibonacci example broken across two scripts, one script serving as a loader and
-the other script acting as a more standard library:
+You can kind of get around the need for stringified code blocks by dynamically
+reading the code you want to compile with tail call optimization, but this
+approach also has downsides in that it goes around the standard Ruby `require`
+process. For example, consider the `Fibonacci` example broken across two scripts,
+one script serving as a loader and the other script acting as a more standard
+library:
 
 ```ruby
 # loader.rb
@@ -122,9 +166,9 @@ module MyFibonacci
 end
 ```
 
-If you really want to get crazy, you could include the `TCOMethod::Mixin` module
-in the Module class and add these behaviors to all Modules and Classes. To quote
-VIM plugin author extraordinaire Tim Pope, "I don't like to get crazy." Consider
+If you really want to get crazy, you can include the `TCOMethod::Mixin` module
+in the `Module` class to add these behaviors to all Modules and Classes. To quote
+VIM plugin author extraordinaire, Tim Pope, "I don't like to get crazy." Consider
 yourself warned.
 
 ```ruby
@@ -144,17 +188,35 @@ puts MyFibonacci.fibonacci(10_000).to_s.length
 ```
 
 ## Gotchas
+**Quirks with the `method_source` gem**:
+- Annotations and `TCOMethod.with_tco` use the
+  [`method_source` gem](https://github.com/banister/method_source) to retrieve
+  the method source to evaluate. As a result, class annotations can act
+  strangely when used in more dynamic contexts like `irb` or `pry`.
+  Additionally, if the code to be evaluated is formatted in unconventional ways,
+  it can make it difficult for `method_source` and `tco_method` to determine the
+  unambiguous source of the method or code block. Most of these ambiguities can
+  be solved by following standard Ruby formating conventions.
 
-Quirks with Module and Class annotations:
+**Quirks with `TCOMethod.with_tco`**:
+- Because the source code of the specified block is determined using the
+  `method_source` gem, the given block will be evaluated with a binding
+  different from that it was defined in. Attempts have been made to get around
+  this, but so far, no dice.
+- `require`, `load`, and `eval` will still load code without tail call
+  optimization enabled even when called from within a block given to
+  `TCOMethod.with_tco`. Each of these methods uses the primary evaluator of the
+  RubyVM which honors the configuration specified by
+  `RubyVM::InstructionSequence.compile_option`.
+
+**Quirks with Module and Class annotations**:
 - Annotations only work with methods defined using the `def` keyword.
-- Annotations use the [`method_source` gem](https://github.com/banister/method_source)
-  to retrieve the method source to reevaluate. As a result, class annotations
-  can act strangely when used in more dynamic contexts like `irb` or `pry`.
 - Annotations reopen the Module or Class by name to redefine the given method.
   This process will fail for dynamic Modules and Classes that aren't assigned to
   constants and, ergo, don't have names.
 
-I'm sure there are more and I will document them here as I come across them.
+There are almost certainly more gotchas, so check back for more in the future if
+you run into weirdness while using this gem.
 
 ## Contributing
 
