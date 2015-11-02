@@ -50,14 +50,18 @@ module TCOMethod
         assert_match(/block required/i, exception.message)
       end
 
-      should "delegate to an instance of WithTCOBlock" do
-        block = proc { "Hello, world!" }
-        expected_result = block.call
-        instance = TCOMethod::BlockWithTCO.new(&block)
-        TCOMethod::BlockWithTCO.expects(:new).with(block).returns(instance)
-        instance.expects(:result).returns(expected_result)
-        result = TCOMethod.with_tco(&block)
-        assert_equal expected_result, result
+      should "compile the given code with tail call optimization" do
+        subject.with_tco do
+          class WithTCODummy
+            def countdown(count, &block)
+              yield count
+              count.zero? ? 0 : countdown(count - 1, &block)
+            end
+          end
+        end
+
+        meth = WithTCODummy.new.method(:countdown)
+        assert tail_call_optimized?(meth, 5)
       end
     end
   end

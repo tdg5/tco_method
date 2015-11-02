@@ -59,6 +59,6 @@ module TCOMethod
   # @return [Object] Returns whatever the result of evaluating the given block.
   def self.with_tco(&block)
     raise ArgumentError, "Block required" unless block_given?
-    BlockWithTCO.new(block).result
+    BlockWithTCO.new(&block).result
   end
 end
