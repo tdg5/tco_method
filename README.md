@@ -1,7 +1,7 @@
 # TCOMethod
 [![Gem Version](https://badge.fury.io/rb/tco_method.svg)](http://badge.fury.io/rb/tco_method)
 [![Yard Docs](http://img.shields.io/badge/yard-docs-blue.svg)](http://www.rubydoc.info/gems/tco_method)
-[![Build Status](https://travis-ci.org/tdg5/tco_method.svg)](https://travis-ci.org/tdg5/tco_method)
+[![Build Status](https://travis-ci.org/tdg5/tco_method.svg?branch=master)](https://travis-ci.org/tdg5/tco_method)
 [![Coverage Status](https://coveralls.io/repos/tdg5/tco_method/badge.svg)](https://coveralls.io/r/tdg5/tco_method)
 [![Code Climate](https://codeclimate.com/github/tdg5/tco_method/badges/gpa.svg)](https://codeclimate.com/github/tdg5/tco_method)
 [![Dependency Status](https://gemnasium.com/tdg5/tco_method.svg)](https://gemnasium.com/tdg5/tco_method)
