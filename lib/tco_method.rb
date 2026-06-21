@@ -27,7 +27,7 @@ module TCOMethod
   # @raise [ArgumentError] if the provided code argument is not a String.
   def self.tco_eval(code, file = nil, path = nil, line = nil)
     raise ArgumentError, "Invalid code string!" unless code.is_a?(String)
-    RubyVM::InstructionSequence.new(code, file, path, line, ISEQ_OPTIONS).eval
+    RubyVM::InstructionSequence.new(code, file, path, line, **ISEQ_OPTIONS).eval
   end
 
   # Allows for executing a block of code with tail call optimization enabled.
